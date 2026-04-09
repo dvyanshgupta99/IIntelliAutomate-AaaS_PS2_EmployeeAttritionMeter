@@ -151,24 +151,24 @@ if uploaded_file is not None and model is not None:
     df_view[display_cols].sort_values(by='Risk_Score_%', ascending=False),
     use_container_width=True
 ) 
- st.divider()
+    st.divider()
 
-risk_filter = st.segmented_control(
-    "Filter employees",
-    options=["All", "High", "Medium", "Stable"],
-    default="All",
-    horizontal=True
-)
+    risk_filter = st.segmented_control(
+     "Filter employees",
+      options=["All", "High", "Medium", "Stable"],
+      default="All",
+      horizontal=True
+    )
 
-# Apply filter (Step 7)
-df_view = df_proc.copy()
+    # Apply filter (Step 7)
+    df_view = df_proc.copy()
 
-if risk_filter == "High":
-    df_view = df_view[df_view["Risk_Tier"] == "High Risk (Critical)"]
-elif risk_filter == "Medium":
-    df_view = df_view[df_view["Risk_Tier"] == "Medium Risk (Monitor)"]
-elif risk_filter == "Stable":
-    df_view = df_view[df_view["Risk_Tier"] == "Low Risk (Stable)"]
+    if risk_filter == "High":
+       df_view = df_view[df_view["Risk_Tier"] == "High Risk (Critical)"]
+    elif risk_filter == "Medium":
+       df_view = df_view[df_view["Risk_Tier"] == "Medium Risk (Monitor)"]
+    elif risk_filter == "Stable":
+       df_view = df_view[df_view["Risk_Tier"] == "Low Risk (Stable)"]
    
 # Select employee for drill-down (Step 5)
 employee_options = df_proc.sort_values(by="Risk_Score_%", ascending=False)["Employee_ID"].astype(str).unique()
