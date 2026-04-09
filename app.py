@@ -101,10 +101,13 @@ if uploaded_file is not None and model is not None:
     # Results Table
     st.subheader("📋 Employee Triage List")
     display_cols = ['Employee_ID', 'Department', 'Risk_Score_%', 'Risk_Tier', 'Recommended_Action']
-    st.dataframe(
-        df_proc[display_cols].sort_values(by='Risk_Score_%', ascending=False),
-        use_container_width=True
-    )
+    # st.dataframe(
+    #     df_proc[display_cols].sort_values(by='Risk_Score_%', ascending=False),
+    #     use_container_width=True
+    # )
+
+    st.components.v1.html(open("hr_retention_ui.html").read(), height=800)
+ 
  
     # Export Button
     st.divider()
