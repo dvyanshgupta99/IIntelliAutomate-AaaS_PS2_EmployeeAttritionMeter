@@ -274,5 +274,5 @@ with right:
         file_name='Actionable_HR_Attrition_Report.csv',
         mime='text/csv'
     )
-else:
+    else:
     st.info("Please upload a CSV file to begin the analysis.")
