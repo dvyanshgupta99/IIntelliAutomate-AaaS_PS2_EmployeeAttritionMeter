@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Employee Retention Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e29;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --accent: #4f7cff;
+    --accent-glow: rgba(79,124,255,0.15);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(79,124,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .nav-section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 8px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-glow); color: var(--accent); font-weight: 500; }
+
+  .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-left: 8px;
+  }
+
+  .model-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 20px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 500;
+    margin-top: 6px;
+  }
+
+  .model-dot {
+    width: 5px; height: 5px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── Main ── */
+  .main {
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1100px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .page-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+    background: var(--surface2);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover { background: #6b8fff; }
+
+  /* ── Metric cards ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    transition: border-color 0.15s;
+  }
+
+  .metric-card:hover { border-color: var(--border-hover); }
+
+  .metric-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .pill-red { background: var(--red-bg); color: var(--red); }
+  .pill-amber { background: var(--amber-bg); color: var(--amber); }
+  .pill-green { background: var(--green-bg); color: var(--green); }
+  .pill-blue { background: var(--accent-glow); color: var(--accent); }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover {
+    border-color: rgba(79,124,255,0.4);
+    background: rgba(79,124,255,0.03);
+  }
+
+  .upload-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .upload-icon-wrap {
+    width: 52px; height: 52px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 22px;
+  }
+
+  .upload-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .upload-chips {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-dim);
+  }
+
+  /* ── Table section ── */
+  .section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .section-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .filter-select:hover { border-color: var(--border-hover); color: var(--text); }
+
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead { background: var(--surface2); }
+
+  th {
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .emp-id {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .dept-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .sentiment {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .sentiment-pos { color: var(--green); }
+  .sentiment-neg { color: var(--red); }
+  .sentiment-neu { color: var(--text-muted); }
+
+  .risk-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .risk-track {
+    flex: 1;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .risk-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .risk-pct {
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .risk-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  /* ── Alert ── */
+  .alert-success {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    background: var(--green-bg);
+    border: 1px solid rgba(52,211,153,0.2);
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ── Footer note ── */
+  .footer-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .anim { animation: fadeIn 0.35s ease forwards; }
+  .anim-d1 { animation-delay: 0.05s; opacity: 0; }
+  .anim-d2 { animation-delay: 0.1s; opacity: 0; }
+  .anim-d3 { animation-delay: 0.15s; opacity: 0; }
+  .anim-d4 { animation-delay: 0.2s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🛡️</div>
+      <div>
+        <div class="logo-text">RetentionAI</div>
+        <div class="logo-sub">HR Intelligence</div>
+      </div>
+    </div>
+
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item active">
+      <span class="nav-icon">📊</span> Risk Dashboard
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📁</span> Upload Data
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📈</span> Trends
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">Reports</div>
+    <div class="nav-item">
+      <span class="nav-icon">📄</span> Export Reports
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🗂️</span> History
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">Settings</div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span> Configuration
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Model version</div>
+      <div class="model-badge">
+        <span class="model-dot"></span>
+        XGBoost v1.0 • Live
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Page header -->
+    <div class="page-header anim anim-d1">
+      <div>
+        <div class="page-title">Employee Retention Risk</div>
+        <div class="page-sub">Upload employee data to identify attrition risks across your organization</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost">⟳ Refresh</button>
+        <button class="btn btn-primary" onclick="triggerDownload()">↓ Download Report</button>
+      </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="metrics anim anim-d2">
+      <div class="metric-card">
+        <div class="metric-label">Total Employees</div>
+        <div class="metric-value">248</div>
+        <div><span class="metric-pill pill-blue">↑ from last upload</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">High Risk</div>
+        <div class="metric-value" style="color:var(--red)">31</div>
+        <div><span class="metric-pill pill-red">⚠ 12.5% of workforce</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Medium Risk</div>
+        <div class="metric-value" style="color:var(--amber)">57</div>
+        <div><span class="metric-pill pill-amber">~ 23% of workforce</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Low Risk</div>
+        <div class="metric-value" style="color:var(--green)">160</div>
+        <div><span class="metric-pill pill-green">✓ 64.5% of workforce</span></div>
+      </div>
+    </div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone anim anim-d2" id="dropZone"
+         ondragover="event.preventDefault(); this.classList.add('dragover')"
+         ondragleave="this.classList.remove('dragover')"
+         ondrop="event.preventDefault(); this.classList.remove('dragover')"
+         onclick="document.getElementById('csvInput').click()">
+      <input type="file" id="csvInput" accept=".csv" style="display:none">
+      <div class="upload-icon-wrap">📂</div>
+      <div class="upload-title">Drop your employee CSV here</div>
+      <div class="upload-sub">Drag & drop, or click to browse — supports standard HR exports</div>
+      <div class="upload-chips">
+        <span class="chip">Employee_ID</span>
+        <span class="chip">Base_Salary</span>
+        <span class="chip">Benchmark_Salary</span>
+        <span class="chip">Tenure_Years</span>
+        <span class="chip">Career_Development</span>
+        <span class="chip">Employment_Type</span>
+        <span class="chip">Feedback_Comments</span>
+        <span class="chip">Department</span>
+      </div>
+    </div>
+
+    <!-- Results section -->
+    <div class="anim anim-d3">
+      <div class="section-bar" style="margin-bottom:14px">
+        <div class="section-title">Analysis Results</div>
+        <div class="section-actions">
+          <select class="filter-select">
+            <option>All departments</option>
+            <option>Engineering</option>
+            <option>Sales</option>
+            <option>Operations</option>
+            <option>HR</option>
+            <option>Finance</option>
+          </select>
+          <select class="filter-select">
+            <option>All risk levels</option>
+            <option>High risk (&gt;70%)</option>
+            <option>Medium risk (40–70%)</option>
+            <option>Low risk (&lt;40%)</option>
+          </select>
+          <select class="filter-select">
+            <option>Sort: Risk ↓</option>
+            <option>Sort: Risk ↑</option>
+            <option>Sort: Tenure</option>
+            <option>Sort: Department</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Department</th>
+              <th>Tenure</th>
+              <th>Comp ratio</th>
+              <th>Sentiment</th>
+              <th>Risk score</th>
+              <th>Risk level</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Success alert -->
+    <div class="alert-success anim anim-d4">
+      <span>✓</span>
+      Analysis complete — 248 employees scored. Download the full report for all engineered features including comp ratio, stagnation index, and survey sentiment.
+    </div>
+
+    <!-- Footer note -->
+    <div class="footer-note anim anim-d4">
+      <span>🔒</span>
+      All data is processed locally. Model: XGBoost + RobustScaler. Features: Comp_Ratio, Stagnation_Index, Is_Contractor, Survey_Sentiment.
+    </div>
+
+  </main>
+</div>
+
+<script>
+const employees = [
+  { id:'EMP-0421', dept:'Engineering', tenure:'2.1 yrs', comp:0.72, sentiment:-0.42, risk:91 },
+  { id:'EMP-0087', dept:'Sales',       tenure:'1.4 yrs', comp:0.65, sentiment:-0.28, risk:78 },
+  { id:'EMP-0558', dept:'Finance',     tenure:'0.9 yrs', comp:0.81, sentiment:-0.19, risk:72 },
+  { id:'EMP-0302', dept:'Operations',  tenure:'3.8 yrs', comp:0.96, sentiment:0.05, risk:61 },
+  { id:'EMP-0155', dept:'HR',          tenure:'5.2 yrs', comp:1.02, sentiment:0.12, risk:44 },
+  { id:'EMP-0611', dept:'Engineering', tenure:'4.1 yrs', comp:1.08, sentiment:0.23, risk:39 },
+  { id:'EMP-0219', dept:'Engineering', tenure:'6.7 yrs', comp:1.21, sentiment:0.61, risk:18 },
+  { id:'EMP-0374', dept:'Sales',       tenure:'4.0 yrs', comp:1.15, sentiment:0.44, risk:9  },
+];
+
+function riskColor(r) {
+  if (r >= 70) return 'var(--red)';
+  if (r >= 40) return 'var(--amber)';
+  return 'var(--green)';
+}
+
+function riskBadge(r) {
+  if (r >= 70) return `<span class="risk-badge" style="background:var(--red-bg);color:var(--red)"><span class="risk-dot" style="background:var(--red)"></span>High</span>`;
+  if (r >= 40) return `<span class="risk-badge" style="background:var(--amber-bg);color:var(--amber)"><span class="risk-dot" style="background:var(--amber)"></span>Medium</span>`;
+  return `<span class="risk-badge" style="background:var(--green-bg);color:var(--green)"><span class="risk-dot" style="background:var(--green)"></span>Low</span>`;
+}
+
+function sentimentLabel(s) {
+  if (s < -0.1) return `<span class="sentiment sentiment-neg">${s.toFixed(2)} neg</span>`;
+  if (s > 0.1)  return `<span class="sentiment sentiment-pos">+${s.toFixed(2)} pos</span>`;
+  return `<span class="sentiment sentiment-neu">${s.toFixed(2)} neu</span>`;
+}
+
+const tbody = document.getElementById('tableBody');
+employees.forEach((e, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="emp-id">${e.id}</td>
+    <td><span class="dept-badge">${e.dept}</span></td>
+    <td style="color:var(--text-dim)">${e.tenure}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim)">${e.comp.toFixed(2)}</td>
+    <td>${sentimentLabel(e.sentiment)}</td>
+    <td>
+      <div class="risk-cell">
+        <div class="risk-track">
+          <div class="risk-fill" style="width:0%;background:${riskColor(e.risk)}" data-target="${e.risk}"></div>
+        </div>
+        <span class="risk-pct" style="color:${riskColor(e.risk)}">${e.risk}%</span>
+      </div>
+    </td>
+    <td>${riskBadge(e.risk)}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Animate bars on load
+setTimeout(() => {
+  document.querySelectorAll('.risk-fill').forEach(el => {
+    el.style.width = el.dataset.target + '%';
+  });
+}, 300);
+
+function triggerDownload() {
+  const rows = [['Employee_ID','Department','Tenure','Comp_Ratio','Survey_Sentiment','Risk_Score_%','Risk_Level']];
+  employees.forEach(e => {
+    const level = e.risk >= 70 ? 'High' : e.risk >= 40 ? 'Medium' : 'Low';
+    rows.push([e.id, e.dept, e.tenure, e.comp.toFixed(2), e.sentiment.toFixed(2), e.risk, level]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv,' + encodeURIComponent(csv);
+  a.download = 'HR_Retention_Report.csv';
+  a.click();
+}
+
+document.getElementById('csvInput').addEventListener('change', function() {
+  if (this.files[0]) {
+    document.querySelector('.upload-title').textContent = '✓ ' + this.files[0].name + ' loaded';
+    document.querySelector('.upload-sub').textContent = 'Running model predictions...';
+  }
+});
+</script>
+</body>
+</html>
