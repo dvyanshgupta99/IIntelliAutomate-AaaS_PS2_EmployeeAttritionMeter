@@ -1,3 +1,12 @@
+import traceback
+try:
+    pass
+except Exception:
+    st.write(traceback.format_exc())
+
+import streamlit as st
+st.write(st.__version__)
+
 # --- 4. FILE UPLOADER ---
 uploaded_file = st.file_uploader("Upload Employee Data (CSV Format)", type="csv")
 
