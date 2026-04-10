@@ -1,185 +1,148 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+import math
  
 # ── PAGE CONFIG ──────────────────────────────────────────────────────────────
 try:
     st.set_page_config(
-        page_title="HR AI Attrition Predictor",
+        page_title="RetainIQ | HR Intelligence",
         layout="wide",
         initial_sidebar_state="expanded",
     )
 except Exception:
     pass
  
-# ── CUSTOM CSS ───────────────────────────────────────────────────────────────
+# ── STYLING (Fixed to ensure no raw CSS text appears) ────────────────────────
 st.markdown("""
 <style>
-    /* Force the CSS to be interpreted as HTML/Style */
     :root {
       --bg:#f4f3ef; --surface:#ffffff; --surface2:#f0efe9;
-      --border:#e2e0d8; --border-dark:#ccc9be;
-      --text:#1a1916; --text-muted:#6b6860; --text-dim:#9c9a94;
+      --border:#e2e0d8; --text:#1a1916; --text-dim:#9c9a94;
       --red:#c0392b; --red-light:#fdf0ee; --red-mid:#f5c6c1;
       --amber:#b8620a; --amber-light:#fdf5e8; --amber-mid:#f5ddb0;
       --green:#1a6b3a; --green-light:#eaf5ee; --green-mid:#b5dfc3;
-      --blue:#1a4a8a; --blue-light:#eef3fb;
-      --r:10px; --r-sm:6px;
     }
+    /* Hide Streamlit default UI */
+    #MainMenu, footer, header { visibility: hidden; }
+    .stDeployButton { display:none !important; }
  
-    html, body, [class*="css"] {
-        font-family: 'Lato', sans-serif !important;
-        background-color: var(--bg) !important;
-        color: var(--text) !important;
-    }
- 
-    /* Topbar styling */
+    /* Layout */
+    .stApp { background-color: var(--bg); }
     .topbar {
         position: fixed; top: 0; left: 0; right: 0; height: 52px; 
-        background: #1a1916; color: #f4f3ef;
-        display: flex; align-items: center; justify-content: space-between; 
-        padding: 0 28px; z-index: 9999;
+        background: #1a1916; color: #f4f3ef; display: flex; 
+        align-items: center; padding: 0 28px; z-index: 9999;
+        font-family: sans-serif; font-weight: bold;
     }
+    .main-container { padding-top: 60px; }
  
-    .status-pill {
-        display: flex; align-items: center; gap: 6px; 
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; 
-        padding: 4px 12px; font-size: 11px; color: rgba(255,255,255,0.7);
-    }
- 
-    .status-dot {
-        width: 6px; height: 6px; border-radius: 50%; 
-        background: #4ade80; animation: blink 2s infinite;
-    }
- 
-    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
- 
-    /* Hide Streamlit elements */
-    #MainMenu, footer, header {visibility: hidden;}
-    .stDeployButton {display:none !important;}
- 
-    /* Table & UI Cards */
-    .tbl-wrap {
+    /* Custom Table Styling */
+    .tbl-wrap { 
         background: var(--surface); border: 1px solid var(--border); 
-        border-radius: var(--r); overflow: hidden; margin-top: 20px;
+        border-radius: 10px; overflow: hidden; margin-top: 20px; 
     }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; font-family: sans-serif; }
     thead th { 
-        background: var(--surface2); padding: 12px; text-align: left; 
-        font-size: 10px; text-transform: uppercase; color: var(--text-dim);
+        background: var(--surface2); padding: 14px; text-align: left; 
+        font-size: 11px; text-transform: uppercase; color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
     }
-    tbody td { padding: 12px; border-bottom: 1px solid var(--border); }
-    .risk-badge {
-        display: inline-flex; align-items: center; gap: 6px; 
-        border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 500;
+    tbody td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    /* Risk Badges */
+    .risk-badge { 
+        border-radius: 20px; padding: 4px 12px; font-size: 11px; 
+        font-weight: 600; display: inline-block; text-align: center;
     }
     .badge-critical { background: var(--red-light); color: var(--red); border: 1px solid var(--red-mid); }
     .badge-medium { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-mid); }
     .badge-stable { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
+    /* Progress Bar */
+    .bar-track { width: 100px; height: 6px; background: var(--border); border-radius: 3px; display: inline-block; margin-right: 8px; }
+    .bar-fill { height: 100%; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
  
 # ── TOPBAR ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="topbar">
-<div class="topbar-brand"><div class="brand-shield">🛡️</div><div class="brand-name">RetainIQ <span>/ HR Intelligence</span></div></div>
-<div class="topbar-right"><div class="status-pill"><div class="status-dot"></div>Model Online</div></div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="topbar">🛡️ RetainIQ / Workforce Risk Dashboard</div>', unsafe_allow_html=True)
  
-# ── ASSET LOADING ────────────────────────────────────────────────────────────
-@st.cache_resource
-def load_assets():
-    try:
-        m = joblib.load('attrition_xgb_model.pkl')
-        sc = joblib.load('robust_scaler.pkl')
-        cf = joblib.load('feature_columns.pkl')
-        return m, sc, cf, True
-    except:
-        return None, None, None, False
+# ── LOGIC: PERFORMANCE-OPTIMIZED PROCESSING ──────────────────────────────────
+def process_workforce_data(df):
+    """Uses vectorized logic to process 50k+ rows instantly."""
+    # Ensure numeric types
+    df['Base_Salary'] = pd.to_numeric(df['Base_Salary'], errors='coerce').fillna(0)
+    df['Benchmark_Salary'] = pd.to_numeric(df['Benchmark_Salary'], errors='coerce').fillna(1)
+    # Calculate Comp Ratio
+    df['Comp_Ratio'] = df['Base_Salary'] / (df['Benchmark_Salary'] + 1)
+    # Vectorized Risk Scoring (Smart Heuristics)
+    conditions = [
+        (df['Comp_Ratio'] < 0.75),
+        (df['Comp_Ratio'] < 0.90),
+        (df['Comp_Ratio'] >= 1.10)
+    ]
+    scores = [80.0, 55.0, 15.0]
+    df['Risk_Score_%'] = np.select(conditions, scores, default=40.0)
+    # Factor in Tenure/Satisfaction if available
+    if 'Job_Satisfaction' in df.columns:
+        df['Risk_Score_%'] += (3 - df['Job_Satisfaction'].fillna(3)) * 5
+    df['Risk_Score_%'] = df['Risk_Score_%'].clip(5, 98)
+    # Assign Tiers
+    df['Risk_Tier'] = np.where(df['Risk_Score_%'] >= 75, 'Critical',
+                      np.where(df['Risk_Score_%'] >= 40, 'Elevated', 'Stable'))
+    return df
  
-model, scaler, core_features, model_loaded = load_assets()
+# ── MAIN APP ─────────────────────────────────────────────────────────────────
+st.markdown('<div class="main-container"></div>', unsafe_allow_html=True)
+st.title("Employee Retention Risk Dashboard")
+st.caption("AI-powered analysis for large workforce datasets.")
  
-# ── DATA PROCESSING ──────────────────────────────────────────────────────────
-def get_sentiment(text):
-    try:
-        from textblob import TextBlob
-        return TextBlob(str(text)).sentiment.polarity
-    except:
-        return 0.0
- 
-def process_data(df):
-    dp = df.copy()
-    # Feature Engineering
-    dp['Comp_Ratio'] = dp['Base_Salary'] / (dp['Benchmark_Salary'] + 1)
-    dp['Survey_Sentiment'] = dp['Feedback_Comments'].apply(get_sentiment)
-    # Logic: If ML model isn't found, use a refined heuristic
-    scores = []
-    for _, r in dp.iterrows():
-        s = 50.0 # Baseline
-        s += 25 if r['Comp_Ratio'] < 0.85 else 10 if r['Comp_Ratio'] < 0.95 else -5
-        s += (3 - r.get('Job_Satisfaction', 3)) * 8
-        s -= r['Survey_Sentiment'] * 20
-        scores.append(min(max(round(s, 1), 2), 99))
-    dp['Risk_Score_%'] = scores
-    dp['Risk_Tier'] = dp['Risk_Score_%'].apply(
-        lambda x: 'High Risk (Critical)' if x >= 75 else ('Medium Risk (Monitor)' if x >= 40 else 'Low Risk (Stable)')
-    )
-    def get_action(row):
-        if row['Risk_Score_%'] >= 75: return "Urgent Stay Interview / Salary Review"
-        if row['Risk_Score_%'] >= 40: return "Manager 1-on-1 Mentorship"
-        return "Regular Engagement"
-    dp['Recommended_Action'] = dp.apply(get_action, axis=1)
-    return dp
- 
-# ── SIDEBAR ──────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
-    st.markdown("### Navigation")
-    st.info("📊 Risk Dashboard")
-    st.markdown("""
-<div class="template-card">
-<div style="font-size:12px; font-weight:600; margin-bottom:8px;">📥 CSV Requirements</div>
-<div class="col-chip">Employee_ID</div><div class="col-chip">Department</div>
-<div class="col-chip">Base_Salary</div><div class="col-chip">Benchmark_Salary</div>
-<div class="col-chip">Job_Satisfaction</div><div class="col-chip">Feedback_Comments</div>
-</div>
-    """, unsafe_allow_html=True)
- 
-# ── MAIN UI ──────────────────────────────────────────────────────────────────
-st.markdown('<div style="font-size:28px; font-family:Syne; font-weight:700;">Employee Retention Risk Dashboard</div>', unsafe_allow_html=True)
-st.write("Upload your workforce data to identify churn risk and view automated strategies.")
- 
-uploaded_file = st.file_uploader("Upload CSV", type=["csv"], label_visibility="collapsed")
+uploaded_file = st.file_uploader("Drop your CSV here", type=["csv"])
  
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    processed = process_data(df)
-    # Summary Metrics
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Headcount", len(processed))
-    c2.metric("Critical Risks", len(processed[processed['Risk_Tier'] == 'High Risk (Critical)']))
-    c3.metric("Avg Risk Score", f"{processed['Risk_Score_%'].mean():.1f}%")
-    # Render Table
+    # 1. Load Data
+    with st.spinner("Processing large dataset..."):
+        df = pd.read_csv(uploaded_file)
+        processed = process_workforce_data(df)
+    # 2. Key Metrics
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Analysed", f"{len(processed):,}")
+    m2.metric("Critical Risks", len(processed[processed['Risk_Tier'] == 'Critical']))
+    m3.metric("Avg Company Risk", f"{processed['Risk_Score_%'].mean():.1f}%")
+ 
+    st.divider()
+ 
+    # 3. Pagination Controller
+    st.subheader("📋 Triage List")
+    batch_size = 20
+    total_rows = len(processed)
+    total_pages = math.ceil(total_rows / batch_size)
+    c1, c2 = st.columns([1, 4])
+    with c1:
+        page_num = st.number_input(f"Page (1-{total_pages})", min_value=1, max_value=total_pages, step=1)
+    # 4. Slice Data for current page only
+    start_idx = (page_num - 1) * batch_size
+    end_idx = start_idx + batch_size
+    page_data = processed.iloc[start_idx:end_idx]
+ 
+    # 5. Build HTML Table
     rows_html = ""
-    for _, row in processed.iterrows():
+    for _, row in page_data.iterrows():
         sc = row['Risk_Score_%']
-        color = "#c0392b" if sc >= 75 else "#b8620a" if sc >= 40 else "#1a6b3a"
-        badge = "badge-critical" if sc >= 75 else "badge-medium" if sc >= 40 else "badge-stable"
-        tier = "High" if sc >= 75 else "Medium" if sc >= 40 else "Low"
+        tier = row['Risk_Tier']
+        # Determine Visuals
+        color = "#c0392b" if tier == "Critical" else "#b8620a" if tier == "Elevated" else "#1a6b3a"
+        badge_cls = "badge-critical" if tier == "Critical" else "badge-medium" if tier == "Elevated" else "badge-stable"
         rows_html += f"""
 <tr>
-<td style="font-family:'IBM Plex Mono';">{row['Employee_ID']}</td>
-<td><span style="background:#eef3fb; padding:3px 8px; border-radius:4px; color:#1a4a8a;">{row['Department']}</span></td>
+<td><code style="font-weight:bold;">{row.get('Employee_ID', 'N/A')}</code></td>
+<td>{row.get('Department', 'N/A')}</td>
 <td>{row['Comp_Ratio']:.2f}</td>
 <td>
-<div class="rbar-track"><div class="rbar-fill" style="width:{sc}%; background:{color};"></div></div>
-<span style="font-family:'IBM Plex Mono'; font-weight:600; color:{color};">{sc}%</span>
+<div class="bar-track"><div class="bar-fill" style="width:{sc}%; background:{color};"></div></div>
+<span style="font-weight:600; color:{color};">{sc}%</span>
 </td>
-<td><span class="risk-badge {badge}">{tier} Risk</span></td>
-<td style="color:#6b6860;">{row['Recommended_Action']}</td>
+<td><span class="risk-badge {badge_cls}">{tier}</span></td>
+<td style="color:#6b6860; font-style:italic;">{row.get('Role', 'N/A')}</td>
 </tr>
         """
     st.markdown(f"""
@@ -187,18 +150,24 @@ if uploaded_file:
 <table>
 <thead>
 <tr>
-<th>Emp ID</th><th>Department</th><th>Comp Ratio</th><th>Risk Level</th><th>Tier</th><th>Action</th>
+<th>Emp ID</th><th>Department</th><th>Comp Ratio</th>
+<th>Risk Score</th><th>Risk Tier</th><th>Position</th>
 </tr>
 </thead>
 <tbody>{rows_html}</tbody>
 </table>
 </div>
     """, unsafe_allow_html=True)
-    st.download_button("Export Full Report", processed.to_csv(index=False), "RetainIQ_Report.csv", use_container_width=True)
+ 
+    st.caption(f"Showing rows {start_idx+1} to {min(end_idx, total_rows)} of {total_rows:,}")
+    # 6. Export
+    st.download_button(
+        label="Download Full Risk Report",
+        data=processed.to_csv(index=False),
+        file_name="HR_Risk_Analysis.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+ 
 else:
-    st.markdown("""
-<div style="text-align:center; padding:60px; border:1px dashed #ccc9be; border-radius:10px; margin-top:20px; color:#9c9a94;">
-<div style="font-size:40px;">📂</div>
-<div>No data loaded. Drag and drop your employee CSV to begin analysis.</div>
-</div>
-    """, unsafe_allow_html=True)
+    st.info("👋 Welcome! Please upload your employee CSV file (50,000 rows max recommended) to generate the risk dashboard.")
