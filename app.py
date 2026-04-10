@@ -15,56 +15,69 @@ except Exception:
  
 # ── CUSTOM CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap%22 rel="stylesheet">
 <style>
-:root {
-  --bg:#f4f3ef; --surface:#ffffff; --surface2:#f0efe9;
-  --border:#e2e0d8; --border-dark:#ccc9be;
-  --text:#1a1916; --text-muted:#6b6860; --text-dim:#9c9a94;
-  --red:#c0392b; --red-light:#fdf0ee; --red-mid:#f5c6c1;
-  --amber:#b8620a; --amber-light:#fdf5e8; --amber-mid:#f5ddb0;
-  --green:#1a6b3a; --green-light:#eaf5ee; --green-mid:#b5dfc3;
-  --blue:#1a4a8a; --blue-light:#eef3fb;
-  --r:10px; --r-sm:6px;
-}
+    /* Force the CSS to be interpreted as HTML/Style */
+    :root {
+      --bg:#f4f3ef; --surface:#ffffff; --surface2:#f0efe9;
+      --border:#e2e0d8; --border-dark:#ccc9be;
+      --text:#1a1916; --text-muted:#6b6860; --text-dim:#9c9a94;
+      --red:#c0392b; --red-light:#fdf0ee; --red-mid:#f5c6c1;
+      --amber:#b8620a; --amber-light:#fdf5e8; --amber-mid:#f5ddb0;
+      --green:#1a6b3a; --green-light:#eaf5ee; --green-mid:#b5dfc3;
+      --blue:#1a4a8a; --blue-light:#eef3fb;
+      --r:10px; --r-sm:6px;
+    }
  
-html,body,[class*="css"]{font-family:'Lato',sans-serif!important;background-color:var(--bg)!important;color:var(--text)!important;}
-#MainMenu,footer,header{visibility:hidden;}
-.stDeployButton{display:none!important;}
+    html, body, [class*="css"] {
+        font-family: 'Lato', sans-serif !important;
+        background-color: var(--bg) !important;
+        color: var(--text) !important;
+    }
  
-/* Topbar */
-.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:var(--text);color:#f4f3ef;
-  display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:9999;}
-.topbar-brand{display:flex;align-items:center;gap:12px;}
-.brand-shield{width:28px;height:28px;background:#f4f3ef;border-radius:5px;
-  display:flex;align-items:center;justify-content:center;font-size:14px;}
-.brand-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.02em;color:#f4f3ef;}
-.status-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:4px 12px;
-  font-size:11px;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.7);}
-.status-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 2s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    /* Topbar styling */
+    .topbar {
+        position: fixed; top: 0; left: 0; right: 0; height: 52px; 
+        background: #1a1916; color: #f4f3ef;
+        display: flex; align-items: center; justify-content: space-between; 
+        padding: 0 28px; z-index: 9999;
+    }
  
-/* Layout */
-.block-container{padding-top:72px!important;max-width:1400px!important;}
-[data-testid="stSidebar"]{background:var(--surface)!important;border-right:1px solid var(--border)!important;top:52px!important;}
+    .status-pill {
+        display: flex; align-items: center; gap: 6px; 
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; 
+        padding: 4px 12px; font-size: 11px; color: rgba(255,255,255,0.7);
+    }
  
-/* Elements */
-.template-card{margin:12px 0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
-.col-chip{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 6px;
-  font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);display:inline-block;margin:2px;}
-.risk-badge{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:500;}
-.badge-critical{background:var(--red-light);color:var(--red);border:1px solid var(--red-mid);}
-.badge-medium{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-mid);}
-.badge-stable{background:var(--green-light);color:var(--green);border:1px solid var(--green-mid);}
+    .status-dot {
+        width: 6px; height: 6px; border-radius: 50%; 
+        background: #4ade80; animation: blink 2s infinite;
+    }
  
-/* Table */
-.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:20px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-thead th{background:var(--surface2);padding:12px;text-align:left;font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);}
-tbody td{padding:12px;border-bottom:1px solid var(--border);}
-.rbar-track{width:60px;height:5px;background:var(--border);border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;}
-.rbar-fill{height:100%;border-radius:3px;}
+    @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+ 
+    /* Hide Streamlit elements */
+    #MainMenu, footer, header {visibility: hidden;}
+    .stDeployButton {display:none !important;}
+ 
+    /* Table & UI Cards */
+    .tbl-wrap {
+        background: var(--surface); border: 1px solid var(--border); 
+        border-radius: var(--r); overflow: hidden; margin-top: 20px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { 
+        background: var(--surface2); padding: 12px; text-align: left; 
+        font-size: 10px; text-transform: uppercase; color: var(--text-dim);
+    }
+    tbody td { padding: 12px; border-bottom: 1px solid var(--border); }
+    .risk-badge {
+        display: inline-flex; align-items: center; gap: 6px; 
+        border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 500;
+    }
+    .badge-critical { background: var(--red-light); color: var(--red); border: 1px solid var(--red-mid); }
+    .badge-medium { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-mid); }
+    .badge-stable { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
 </style>
 """, unsafe_allow_html=True)
  
